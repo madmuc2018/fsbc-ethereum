@@ -1,0 +1,4 @@
+.vagrant
+deploy-contract-comments.js
+*.log
+.DS_Store

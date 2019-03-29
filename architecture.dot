@@ -1,0 +1,23 @@
+graph G {
+  graph[center=true, ranksep=0.5, nodesep=0.5, splines=true, fontname="times-bold"]
+  node [shape="box", fontname="times-bold"]
+  subgraph cluster_0 {
+    label = "Laptop"
+
+    common[label="Genesis.json"]
+    vm1[label="VM\n\nEthereum node\nAccount1\n192.168.0.201"]
+    vm2[label="VM\n\nEthereum node\nAccount2\n192.168.0.202"]
+    vm3[label="VM\n\nEthereum node\nAccount3\n192.168.0.203"]
+    vm4[label="VM\n\nClient\nNodejs\n192.168.0.210"]
+    contract[label="Greetingsv1.sol"]
+
+    vm4 -- contract [style=invis]
+
+    vm1 -- vm2 -- vm3
+    vm1 -- vm3
+
+    vm1 -- common[style=dashed]
+    vm2 -- common[style=dashed]
+    vm3 -- common[style=dashed]
+  }
+}
