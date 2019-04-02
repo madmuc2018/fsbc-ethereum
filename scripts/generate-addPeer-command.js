@@ -11,7 +11,7 @@ if (!enode && !ip) {
 const AT_SPLIT = enode.split('@');
 const n_enode = `${AT_SPLIT[0]}@${ip}:${AT_SPLIT[1].split(':')[1]}`;
 
-const addPeer = `geth --exec 'admin.addPeer(${n_enode})' attach ipc://home/vagrant/Blockchain-Test-Network/Ethereum-network/ethdata/geth.ipc || echo Could not connect to node at ${ip}`;
+const addPeer = `geth --exec 'admin.addPeer(${n_enode})' attach ipc://home/vagrant/Ethereum-network/ethdata/geth.ipc || echo Could not connect to node at ${ip}`;
 
 // process.stdout.write(addPeer);
 console.log(addPeer);

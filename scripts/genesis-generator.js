@@ -1,11 +1,11 @@
 const newAccount = process.argv[2];
+const genFile = process.argv[3];
 
-if (!newAccount) {
+if (!newAccount || !genFile) {
   throw new Error('No account provided');
 }
 
 const fs = require('fs');
-const genFile = '/mnt/vagrant/Blockchain-Test-Network/Ethereum-network/genesis.json'
 
 fs.readFile(genFile, 'utf8', (err, data) => {
   if (err) throw err;

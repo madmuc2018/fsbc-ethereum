@@ -5,7 +5,7 @@ nohup geth \
 	--networkid 4088 \
 	--nodiscover \
 	--unlock $ACCOUNT \
-	--password "/mnt/vagrant/password" \
+	--password "./password" \
 	--rpc \
 	--rpcport "8000" \
 	--rpcaddr "0.0.0.0" \
