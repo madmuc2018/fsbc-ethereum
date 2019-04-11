@@ -3,3 +3,4 @@
 .DS_Store
 addPeers.sh
 config/genesis.json
+client-demo/node_modules

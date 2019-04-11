@@ -1,4 +1,4 @@
-def common_config(config, memory = "1024")
+def common_config(config, memory = "3000")
   config.vm.hostname="vagrant"
   config.vm.synced_folder ".", "/mnt/vagrant"
   config.vm.box_check_update = false
@@ -24,11 +24,15 @@ def common_config(config, memory = "1024")
     apt-get --purge unattended-upgrades
     apt-get update
     while pgrep unattended; do sleep 10; done;
-    apt-get install -y build-essential
+    apt-get install -y build-essential tree
     curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
     while pgrep unattended; do sleep 10; done;
     apt-get install -y nodejs
   SHELL
+end
+
+def forward_port(config, guest, host = guest)
+  config.vm.network :forwarded_port, guest: guest, host: host, auto_correct: true
 end
 
 Vagrant.configure("2") do |vagrant_conf|
@@ -37,6 +41,9 @@ Vagrant.configure("2") do |vagrant_conf|
     config.vm.network "public_network", bridge: "en0: Wi-Fi (AirPort)", ip: "192.168.0.201"
     config.vm.hostname="vagrant1"
     config.vm.box = "ubuntu/xenial64"
+
+    # For connecting remix
+    forward_port(config, 8000)
   end
 
   vagrant_conf.vm.define "m2" do |config|
