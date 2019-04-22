@@ -1,36 +1,62 @@
-const fs = require('fs');
+const readFile = require('pify')(require('fs').readFile);
 const Web3 = require('web3'); 
 const solc = require('solc');
 
+const contract = 'Greetingsv2.sol';
+const transactionFee = 4700000;
+
 function setupWeb3(address) {
-  console.log(`Setting up web3 for address ${address}`); 
-  const web3 = new Web3();
-  web3.setProvider(new web3.providers.HttpProvider(`http://${address}:8000`));
-  return web3;
+  console.log(`Setting up web3 for address ${address}`);
+  return new Web3(new Web3.providers.HttpProvider(`http://${address}:8000`));
 }
 
-function compileContract() {
-  const source = fs.readFileSync('./Greetingsv1.sol', 'utf8');
-  console.log('Compiling ...');
-  const output = solc.compile(source, 1);
-  const contracts = output.contracts;
+async function compileContract() {
+  const input = {
+    language: 'Solidity',
+    sources: {
+      'Greetingsv2.sol': {
+        content: await readFile(contract, 'utf8')
+      }
+    },
+    settings: {
+      outputSelection: {
+        '*': {
+          '*': [ '*' ]
+        }
+      }
+    }
+  };
+
+  const output = JSON.parse(solc.compile(JSON.stringify(input)));
+  if (output.errors) {
+    throw new Error(JSON.stringify(output.errors));
+  }
+
+  const compiledContract = output.contracts['Greetingsv2.sol']['Greetingsv2'];
+
   return {
-    abi: JSON.parse(contracts[':Greetingsv1'].interface),
-    code: '0x'+contracts[':Greetingsv1'].bytecode
+    abi: compiledContract.abi,
+    code: `0x${compiledContract.evm.bytecode.object}`
   };
 }
 
 async function deployContract(web3) {
-  const {abi, code} = compileContract();
+  const {abi, code} = await compileContract();
   const accounts = await web3.eth.getAccounts();
   accounts.forEach(a => console.log(`Found account ${a}`));
+
+  const balance = await web3.eth.getBalance(accounts[0]);
+  console.log('balance', balance);
 
   console.log('Deploying ...');
   const contract = await new web3.eth.Contract(abi)
     .deploy({ data: code })
-    .send({ gas: 4700000, from: accounts[0] });
+    .send({ gas: transactionFee, from: accounts[0] });
 
-  console.log('contract deployed at', contract.options.address, 'abi: ', abi);
+  debugger;
+
+  // console.log('contract deployed at', contract.options.address, 'abi: ', abi);
+  console.log('contract deployed at', contract.options.address);
   return {
     abi,
     address: contract.options.address
@@ -40,10 +66,10 @@ async function deployContract(web3) {
 async function setGreeting(web3, contract) {
   const {abi, address} = contract;
   const instance = new web3.eth.Contract(abi, address);
-  const res = await instance.methods.setGreeting('Im Happy')
+  const res = await instance.methods.setGreeting('Im Happy3')
     .send({
       from: (await web3.eth.getAccounts())[0],
-      gas: 4700000
+      gas: transactionFee
     });
   return res;
 }
@@ -62,8 +88,9 @@ async function main() {
     // const m3 = setupWeb3('192.168.0.203');
 
     const contract = await deployContract(m1);
-    console.log(await setGreeting(m2, contract));
-    console.log(await getGreeting(m1, contract));
+    console.log('set greeting');
+    await setGreeting(m1, contract);
+    console.log('get greeting', await getGreeting(m2, contract));
   }
   catch(e) {
     console.log(e);

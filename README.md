@@ -11,3 +11,5 @@
 # Notes
 - Since the datadir flag is used in the geth commands, there will be 2 different ethereum directories (~/.ethereum and the datadir).  so specify which ipc to attach to
 - The genesis.json file is shared among the VMs. Make sure to start initializing the nodes after all changes have been made to the genesis file
+- Decided to stick with web3 v1 even though it is at beta phase because it's api supports promise and easier to use, plus when the offical v1 kicks in there won't be a major migration
+- Test multiple versions of web3 and so far only 1beta37 works

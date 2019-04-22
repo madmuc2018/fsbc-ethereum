@@ -2,14 +2,15 @@
   "name": "vagrant",
   "version": "1.0.0",
   "description": "",
-  "main": "compiled-contract.js",
+  "main": "deploy-contract.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "solc": "0.4.25",
+    "pify": "^4.0.1",
+    "solc": "^0.5.7",
     "web3": "1.0.0-beta.37"
   }
 }

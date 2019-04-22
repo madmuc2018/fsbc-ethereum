@@ -4,13 +4,8 @@ SHELL := /usr/bin/env bash
 SHARED_ENV=/mnt/vagrant
 ISOLATED_ENV=/home/vagrant/Ethereum-network
 
-eth: spin-up start-first-node start-subsequent-nodes start-mining connect-nodes
+eth: spin-up start-first-node start-subsequent-nodes start-mining connect-nodes test-deploy-contract stop-mining
 	echo Up and running
-test-deploy-contract-full: eth
-	vagrant up client
-	vagrant ssh client -- 'cd $(SHARED_ENV)/client-demo && npm install && time node deploy-contract.js'
-test-deploy-contract:
-	vagrant ssh client -- 'cd $(SHARED_ENV)/client-demo && npm install && time node deploy-contract.js'
 spin-up:
 	rm ./config/genesis.json || echo Fresh genesis
 	cp ./config/genesis.orig.json ./config/genesis.json
@@ -33,12 +28,11 @@ start-subsequent-nodes:
 	# vagrant ssh m3 -- 'pgrep geth'
 start-mining:
 	vagrant ssh m1 -- 'geth --exec "miner.start()" attach ipc:/$(ISOLATED_ENV)/ethdata/geth.ipc'
-	vagrant ssh m2 -- 'geth --exec "miner.start()" attach ipc:/$(ISOLATED_ENV)/ethdata/geth.ipc'
+	# vagrant ssh m2 -- 'geth --exec "miner.start()" attach ipc:/$(ISOLATED_ENV)/ethdata/geth.ipc'
 	# vagrant ssh m3 -- 'geth --exec "miner.start()" attach ipc:/$(ISOLATED_ENV)/ethdata/geth.ipc'
 connect-nodes:
 	rm addPeers.sh || echo Fresh addPeers.sh
-	touch addPeers.sh
-	sudo chmod +x addPeers.sh
+	cp addPeers.sh.orig addPeers.sh
 	vagrant ssh m1 -- 'node $(SHARED_ENV)/scripts/generate-addPeer-command.js $$(geth --exec "admin.nodeInfo.enode" attach ipc:/$(ISOLATED_ENV)/ethdata/geth.ipc) 192.168.0.201 >> $(SHARED_ENV)/addPeers.sh'
 	vagrant ssh m2 -- 'node $(SHARED_ENV)/scripts/generate-addPeer-command.js $$(geth --exec "admin.nodeInfo.enode" attach ipc:/$(ISOLATED_ENV)/ethdata/geth.ipc) 192.168.0.202 >> $(SHARED_ENV)/addPeers.sh'
 	# vagrant ssh m3 -- 'node $(SHARED_ENV)/scripts/generate-addPeer-command.js $$(geth --exec "admin.nodeInfo.enode" attach ipc:/$(ISOLATED_ENV)/ethdata/geth.ipc) 192.168.0.203 >> $(SHARED_ENV)/addPeers.sh'
@@ -48,6 +42,10 @@ connect-nodes:
 	vagrant ssh m1 -- 'geth --exec "admin.peers" attach ipc:/$(ISOLATED_ENV)/ethdata/geth.ipc'
 	vagrant ssh m2 -- 'geth --exec "admin.peers" attach ipc:/$(ISOLATED_ENV)/ethdata/geth.ipc'
 	# vagrant ssh m3 -- 'geth --exec "admin.peers" attach ipc:/$(ISOLATED_ENV)/ethdata/geth.ipc'
+test-deploy-contract:
+	vagrant ssh m2 -- 'cd $(SHARED_ENV)/client-demo && time node deploy-contract.js'
+test: start-mining test-deploy-contract stop-mining
+	echo Done testing
 #===================
 # Dependencies
 #===================
@@ -78,3 +76,11 @@ install-yarn:
 	sudo apt-get install --no-install-recommends yarn
 attach:
 	geth attach ipc:/$(ISOLATED_ENV)/ethdata/geth.ipc
+download-ethereum:
+	rm -rf ethereum-packages.zip /home/vagrant/ethereum-packages
+	sudo apt-get install software-properties-common
+	sudo add-apt-repository -y ppa:ethereum/ethereum
+	sudo apt-get update
+	mkdir /home/vagrant/ethereum-packages && cd /home/vagrant/ethereum-packages && apt-get download $$(apt-rdepends ethereum|grep -v "^ ")
+	cd /home/vagrant/ethereum-packages && zip -r ethereum-packages.zip *
+	mv ethereum-packages.zip /mnt/vagrant/.
